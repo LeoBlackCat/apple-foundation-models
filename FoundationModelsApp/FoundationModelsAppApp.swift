@@ -11,7 +11,7 @@ import SwiftUI
 struct FoundationModelsAppApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(story: .constant(Story(title: "My Story", text: AttributedString("This is a sample story."))))
         }
     }
 }

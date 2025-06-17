@@ -8,95 +8,330 @@
 import SwiftUI
 import FoundationModels
 import os
+import Speech
+import AVFoundation
+
+struct GlassBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(.ultraThinMaterial)
+            .cornerRadius(16)
+    }
+}
+
+struct GlassButton: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+    let isDisabled: Bool
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: systemImage)
+                Text(title)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(.ultraThinMaterial)
+            .foregroundColor(isDisabled ? .gray : .primary)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .disabled(isDisabled)
+    }
+}
 
 struct ContentView: View {
+    @Binding var story: Story
+    @State var isRecording = false
+    @State var isPlaying = false
+    
+    @State var recorder: Recorder? = nil
+    @State var speechTranscriber: SpokenWordTranscriber? = nil
+    
+    @State var downloadProgress = 0.0
+    
+    @State var currentPlaybackTime = 0.0
+    
+    @State var timer: Timer?
+       
     @State private var response: String = ""
     @State private var isStreaming: Bool = false
     @State private var elapsedTime: TimeInterval = 0
-    @State private var timer: Timer? = nil
-    @State private var userPrompt: String = "I'm in Dushanbe and want to go to Bishkek, but I don't want to cross into Uzbekistan. What are my options?"
+    @State private var modelTimer: Timer? = nil
+    @State private var transcriptionText: String = ""
+    @State private var isTranscribing: Bool = false
+    @State private var supportedLocales: [Locale] = []
+    @State private var selectedLocale: Locale = .current
+    @State private var userPrompt: String = "What's a common law?"
     @State private var showCopiedAlert: Bool = false
+    @State private var selectedTab: Int = 3  // Set default tab to transcription
     private let logger = Logger(subsystem: "com.yourapp.FoundationModelsApp", category: "ContentView")
-    private var session: LanguageModelSession { LanguageModelSession(instructions: "You are a helpful travel assistant who provides accurate, realistic, and well-structured travel advice. Avoid making up transport companies or border crossings that don't exist. Always take into account regional geography and political realities when suggesting routes. Keep your response concise but informative.") }
+    private var session: LanguageModelSession { LanguageModelSession(instructions: """
+        American Legal System – Key Concepts
 
+        America was founded on the idea that government power comes from the people.
+        Laws can be challenged and changed by citizens through voting and courts.
+        The U.S. uses a common law system: both written laws and judicial decisions matter.
+        It's also an adversarial system: two sides argue their case before a judge or jury.
+        Lawyers play key roles in government, business, and regulation.
+
+        Explain all these concepts to the user based on your knowledge and answer their questions clearly and simply.
+        """) }
+    //private var session: LanguageModelSession { LanguageModelSession(instructions: "You are a helpful grammar assistant") }
+
+    init(story: Binding<Story>) {
+        self._story = story
+        // Removed initialization of recorder and speechTranscriber here
+    }
+    
     var body: some View {
-        VStack(spacing: 0) {
-            VStack {
-                Text("FoundationModels Example")
-                    .font(.title2)
-                    .fontWeight(.medium)
-                
-                TextField("Enter your question", text: $userPrompt)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-                    .disabled(isStreaming)
-                
-                if isStreaming {
-                    ProgressView()
-                }
-                if isStreaming || elapsedTime > 0 {
-                    Text(String(format: "Time elapsed: %.1fs", elapsedTime))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                HStack {
-                    if isStreaming {
-                        Button("Stop") {
-                            // To implement cancellation, you will need the API for it.
-                            // For now, it does nothing.
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            TabView(selection: $selectedTab) {
+                // Chat Tab
+                VStack(spacing: 16) {
+                    VStack(spacing: 16) {
+                        Text("Foundation Models")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
+                        
+                        TextEditor(text: $userPrompt)
+                            .frame(height: 100)
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .disabled(isStreaming)
+                        
+                        if isStreaming {
+                            ProgressView()
+                                .scaleEffect(1.2)
                         }
-                        .disabled(true)
+                        if isStreaming || elapsedTime > 0 {
+                            Text(String(format: "Time elapsed: %.1fs", elapsedTime))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        HStack(spacing: 12) {
+                            if isStreaming {
+                                GlassButton(
+                                    title: "Stop",
+                                    systemImage: "stop.circle.fill",
+                                    action: { },
+                                    isDisabled: true
+                                )
+                            } else {
+                                GlassButton(
+                                    title: "Start",
+                                    systemImage: "play.circle.fill",
+                                    action: {
+                                        Task {
+                                            await fetchResponse()
+                                        }
+                                    },
+                                    isDisabled: false
+                                )
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(20)
+                    .padding()
+                    
+                    if !response.isEmpty {
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                Text(.init(response))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding()
+                                    .background(.ultraThinMaterial)
+                                    .cornerRadius(16)
+                                    .padding(.horizontal)
+                                    .textSelection(.enabled)
+                                    .id("responseText")
+                            }
+                            .onChange(of: response) { _ in
+                                DispatchQueue.main.async {
+                                    withAnimation {
+                                        proxy.scrollTo("responseText", anchor: .bottom)
+                                    }
+                                }
+                            }
+                        }
                     } else {
-                        Button("Start") {
-                            Task {
-                                await fetchResponse()
+                        Spacer()
+                    }
+                    
+                    if !response.isEmpty {
+                        GlassButton(
+                            title: "Copy All",
+                            systemImage: "doc.on.doc",
+                            action: {
+#if os(iOS)
+                                UIPasteboard.general.string = response
+#endif
+                                showCopiedAlert = true
+                            },
+                            isDisabled: false
+                        )
+                        .padding(.horizontal)
+                    }
+                }
+                .tabItem {
+                    Label("Chat", systemImage: "message.fill")
+                }
+                .tag(0)
+                
+                // History Tab
+                VStack {
+                    Text("History")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    Spacer()
+                }
+                .tabItem {
+                    Label("History", systemImage: "clock.fill")
+                }
+                .tag(1)
+                
+                // Settings Tab
+                VStack {
+                    Text("Settings")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    Spacer()
+                }
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(2)
+                
+                // Transcription Tab
+                VStack(spacing: 16) {
+                    Text("Text Transcription")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    
+                    if !supportedLocales.isEmpty {
+                        Picker("Select Language", selection: $selectedLocale) {
+                            ForEach(supportedLocales, id: \.identifier) { locale in
+                                Text(locale.localizedString(forIdentifier: locale.identifier) ?? locale.identifier)
+                                    .tag(locale)
                             }
                         }
+                        .pickerStyle(.menu)
+                        .padding(8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
                     }
-                }
-                .padding(.vertical, 8)
-            }
-            .padding()
-            .background(Color(.systemBackground))
-            
-            if !response.isEmpty {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        Text(response)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding()
-                            .textSelection(.enabled)
-                            .id("responseText")
+                    
+                    Text((speechTranscriber?.finalizedTranscript ?? "") + (speechTranscriber?.volatileTranscript ?? ""))
+                        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+                        .padding(8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+
+                    
+                    HStack(spacing: 12) {
+                        GlassButton(
+                            title: isRecording ? "Stop" : "Transcribe",
+                            systemImage: isRecording ? "stop.circle.fill" : "waveform",
+                            action: {
+                                isRecording.toggle()
+                            },
+                            isDisabled: recorder == nil // Disable if recorder not initialized
+                        )
                     }
-                    .onChange(of: response) { _ in
-                        DispatchQueue.main.async {
-                            withAnimation {
-                                proxy.scrollTo("responseText", anchor: .bottom)
-                            }
+                    
+                    if !response.isEmpty {
+                        ScrollView {
+                            Text(.init(response))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(16)
+                                .textSelection(.enabled)
                         }
                     }
+                    
+                    Spacer()
                 }
-            } else {
-                Spacer()
-            }
-            
-            if !response.isEmpty {
-                Button(action: {
-                    UIPasteboard.general.string = response
-                    showCopiedAlert = true
-                }) {
-                    Label("Copy All", systemImage: "doc.on.doc")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
                 .padding()
-                .background(Color(.systemBackground))
+                .tabItem {
+                    Label("Transcribe", systemImage: "waveform")
+                }
+                .tag(3)
+            }
+            .tint(.blue)
+            .onAppear {
+#if os(iOS)
+                // Customize the tab bar appearance
+                let appearance = UITabBarAppearance()
+                appearance.configureWithTransparentBackground()
+                appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.8)
+                
+                // Add blur effect
+                let blurEffect = UIBlurEffect(style: .systemMaterial)
+                appearance.backgroundEffect = blurEffect
+                
+                UITabBar.appearance().standardAppearance = appearance
+                UITabBar.appearance().scrollEdgeAppearance = appearance
+#endif
+                session.prewarm()
+                if speechTranscriber == nil {
+                    let newTranscriber = SpokenWordTranscriber(story: $story)
+                    speechTranscriber = newTranscriber
+                    recorder = Recorder(transcriber: newTranscriber, story: $story)
+                }
+                //await loadSupportedLocales()
             }
         }
         .edgesIgnoringSafeArea(.bottom)
         .alert("Copied to Clipboard", isPresented: $showCopiedAlert) {
             Button("OK", role: .cancel) { }
+        }
+        .task {
+            session.prewarm()
+            //await loadSupportedLocales()
+        }
+        .onChange(of: isRecording) { oldValue, newValue in
+            guard newValue != oldValue else { return }
+            if newValue == true {
+                Task {
+                    do {
+                        try await recorder?.record()
+                    } catch {
+                        print("could not record: \(error)")
+                    }
+                }
+            } else {
+                Task {
+                    try await recorder?.stopRecording()
+                }
+            }
         }
     }
 
@@ -105,8 +340,8 @@ struct ContentView: View {
         response = ""
         elapsedTime = 0
         let startDate = Date()
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+        modelTimer?.invalidate()
+        modelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             elapsedTime = Date().timeIntervalSince(startDate)
         }
         do {
@@ -120,11 +355,14 @@ struct ContentView: View {
             response = "Failed to stream response: \(error.localizedDescription)"
         }
         isStreaming = false
-        timer?.invalidate()
-        timer = nil
+        modelTimer?.invalidate()
+        modelTimer = nil
     }
 }
 
+
+
 #Preview {
-    ContentView()
+    ContentView(story: .constant(Story(title: "My Story", text: AttributedString("This is a sample story."))))
 }
+
