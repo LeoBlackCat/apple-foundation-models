@@ -7,16 +7,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "2AB126D6-97D8-416E-8317-D16FF2D50A29"
+            uuid = "8BC4EAE9-B836-4581-A6F3-ECC8AEEFE2F9"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FoundationModelsApp/Helpers/SpokenWordTranscriber.swift"
+            filePath = "FoundationModelsApp/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "68"
-            endingLineNumber = "68"
-            landmarkName = "setUpTranscriber()"
+            startingLineNumber = "16"
+            endingLineNumber = "16"
+            landmarkName = "speechSynthesizer(_:didStart:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "10EF3884-78DD-4EA5-A039-9451B8949961"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FoundationModelsApp/ContentView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "19"
+            endingLineNumber = "19"
+            landmarkName = "speechSynthesizer(_:didFinish:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

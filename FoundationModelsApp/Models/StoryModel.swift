@@ -16,6 +16,7 @@ class Story: Identifiable {
     var text: AttributedString
     var url: URL?
     var isDone: Bool
+    var modelResponse: String = ""
     
     init(title: String, text: AttributedString, url: URL? = nil, isDone: Bool = false) {
         self.title = title

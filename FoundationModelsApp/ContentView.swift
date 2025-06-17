@@ -11,6 +11,15 @@ import os
 import Speech
 import AVFoundation
 
+class SpeechSynthDelegate: NSObject, AVSpeechSynthesizerDelegate {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+        print("Started speaking")
+    }
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        print("Finished speaking")
+    }
+}
+
 struct GlassBackground: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -46,6 +55,7 @@ struct GlassButton: View {
 }
 
 struct ContentView: View {
+    @State private var synthesizer = AVSpeechSynthesizer()
     @Binding var story: Story
     @State var isRecording = false
     @State var isPlaying = false
@@ -70,6 +80,8 @@ struct ContentView: View {
     @State private var userPrompt: String = "What's a common law?"
     @State private var showCopiedAlert: Bool = false
     @State private var selectedTab: Int = 3  // Set default tab to transcription
+    @State private var speechSynthDelegate = SpeechSynthDelegate()
+    
     private let logger = Logger(subsystem: "com.yourapp.FoundationModelsApp", category: "ContentView")
     private var session: LanguageModelSession { LanguageModelSession(instructions: """
         American Legal System – Key Concepts
@@ -217,6 +229,31 @@ struct ContentView: View {
                     Text("Settings")
                         .font(.title2)
                         .fontWeight(.medium)
+                    
+                    GlassButton(
+                        title: "Test Speech",
+                        systemImage: "speaker.wave.2",
+                        action: {
+                            if AVAudioSession.sharedInstance().category != .playback {
+                                    do {
+                                        try AVAudioSession.sharedInstance().setCategory(.playback)
+                                    } catch {
+                                        print(error)
+                                    }
+                                }
+                            synthesizer.delegate = speechSynthDelegate
+                            let voice = AVSpeechSynthesisVoice(language: "en-US")
+                            let utterance = AVSpeechUtterance(string: "This is a test of the speech synthesis system.")
+                            utterance.voice = voice
+                            utterance.rate = 0.5
+                            utterance.pitchMultiplier = 1.0
+                            utterance.volume = 1.0
+                            synthesizer.speak(utterance)
+                        },
+                        isDisabled: false
+                    )
+                    .padding()
+                    
                     Spacer()
                 }
                 .tabItem {
@@ -254,6 +291,27 @@ struct ContentView: View {
                                 .stroke(Color.white.opacity(0.2), lineWidth: 1)
                         )
 
+                    if !story.modelResponse.isEmpty {
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                Text(.init(story.modelResponse))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding()
+                                    .background(.ultraThinMaterial)
+                                    .cornerRadius(16)
+                                    .padding(.horizontal)
+                                    .textSelection(.enabled)
+                                    .id("modelResponseText")
+                            }
+                            .onChange(of: story.modelResponse) { _ in
+                                DispatchQueue.main.async {
+                                    withAnimation {
+                                        proxy.scrollTo("modelResponseText", anchor: .bottom)
+                                    }
+                                }
+                            }
+                        }
+                    }
                     
                     HStack(spacing: 12) {
                         GlassButton(
@@ -365,4 +423,3 @@ struct ContentView: View {
 #Preview {
     ContentView(story: .constant(Story(title: "My Story", text: AttributedString("This is a sample story."))))
 }
-

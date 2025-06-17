@@ -7,16 +7,20 @@
 
 
 import Foundation
+import FoundationModels
 import Speech
 import SwiftUI
+import AVFoundation
 
 @Observable
-final class SpokenWordTranscriber: Sendable {
+final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelegate {
     private var inputSequence: AsyncStream<AnalyzerInput>?
     private var inputBuilder: AsyncStream<AnalyzerInput>.Continuation?
     private var transcriber: SpeechTranscriber?
     private var analyzer: SpeechAnalyzer?
     private var recognizerTask: Task<(), Error>?
+    //private let synthesizer = AVSpeechSynthesizer()
+    private var synth = AVSpeechSynthesizer()
     
     static let magenta = Color(red: 0.54, green: 0.02, blue: 0.6).opacity(0.8) // #e81cff
     
@@ -35,6 +39,13 @@ final class SpokenWordTranscriber: Sendable {
     
     init(story: Binding<Story>) {
         self.story = story
+    }
+    
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+        print("Started speaking")
+    }
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        print("Finished speaking")
     }
     
     func setUpTranscriber() async throws {
@@ -86,13 +97,40 @@ final class SpokenWordTranscriber: Sendable {
     func updateStoryWithNewText(withFinal str: AttributedString) {
         story.text.wrappedValue.append(str)
         
-//        // Update title based on transcribed text
-//        Task {
-//            if let suggestedTitle = try? await story.wrappedValue.suggestedTitle() {
-//                print("suggestedTitle: \(suggestedTitle)")
-//                story.title.wrappedValue = suggestedTitle
-//            }
-//        }
+        // Trigger model response for the transcribed text
+        Task {
+            do {
+                let session = LanguageModelSession(instructions: "Answer the question in a concise manner, 1-2 sentences, your output will be spoken out loud.")
+ 
+                // Extract plain text from AttributedString
+                let plainText = String(str.characters)
+                
+                for try await segment in session.streamResponse(to: plainText) {
+                    story.modelResponse.wrappedValue = segment
+                }
+                
+                // After streaming is complete, play the response using text-to-speech
+                await MainActor.run {
+                    if AVAudioSession.sharedInstance().category != .playback {
+                            do {
+                                try AVAudioSession.sharedInstance().setCategory(.playback)
+                            } catch {
+                                print(error)
+                            }
+                        }
+                    synth.delegate = self
+                    let voice = AVSpeechSynthesisVoice(language: "en-US")
+                    let utterance = AVSpeechUtterance(string: story.modelResponse.wrappedValue)
+                    utterance.voice = voice
+                    utterance.rate = 0.5 // Slightly slower rate for better clarity
+                    utterance.pitchMultiplier = 1.0
+                    utterance.volume = 1.0
+                    synth.speak(utterance)
+                }
+            } catch {
+                print("Failed to get model response: \(error)")
+            }
+        }
     }
     
     func streamAudioToTranscriber(_ buffer: AVAudioPCMBuffer) async throws {
