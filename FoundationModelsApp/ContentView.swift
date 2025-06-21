@@ -230,28 +230,44 @@ struct ContentView: View {
                         .font(.title2)
                         .fontWeight(.medium)
                     
-                    GlassButton(
-                        title: "Test Speech",
-                        systemImage: "speaker.wave.2",
-                        action: {
-                            if AVAudioSession.sharedInstance().category != .playback {
-                                    do {
-                                        try AVAudioSession.sharedInstance().setCategory(.playback)
-                                    } catch {
-                                        print(error)
-                                    }
+                    VStack(spacing: 16) {
+                        Text("ElevenLabs Configuration")
+                            .font(.headline)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("API Key")
+                                .font(.subheadline)
+                            SecureField("Enter API Key", text: .init(
+                                get: { ElevenLabsSettings.shared.apiKey },
+                                set: { ElevenLabsSettings.shared.apiKey = $0 }
+                            ))
+                            .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Voice ID")
+                                .font(.subheadline)
+                            TextField("Enter Voice ID", text: .init(
+                                get: { ElevenLabsSettings.shared.voiceID },
+                                set: { ElevenLabsSettings.shared.voiceID = $0 }
+                            ))
+                            .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        GlassButton(
+                            title: "Test Speech",
+                            systemImage: "speaker.wave.2",
+                            action: {
+                                Task {
+                                    //await speechTranscriber?.testSpeech(text: "This is a test of the speech synthesis system.")
                                 }
-                            synthesizer.delegate = speechSynthDelegate
-                            let voice = AVSpeechSynthesisVoice(language: "en-US")
-                            let utterance = AVSpeechUtterance(string: "This is a test of the speech synthesis system.")
-                            utterance.voice = voice
-                            utterance.rate = 0.5
-                            utterance.pitchMultiplier = 1.0
-                            utterance.volume = 1.0
-                            synthesizer.speak(utterance)
-                        },
-                        isDisabled: false
-                    )
+                            },
+                            isDisabled: !ElevenLabsSettings.shared.isConfigured
+                        )
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(20)
                     .padding()
                     
                     Spacer()

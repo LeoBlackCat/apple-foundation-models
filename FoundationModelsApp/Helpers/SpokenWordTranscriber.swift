@@ -12,6 +12,55 @@ import Speech
 import SwiftUI
 import AVFoundation
 
+enum ElevenLabsError: Error {
+    case invalidResponse
+    case httpError(Int)
+    case apiError(String)
+    case audioGenerationFailed
+    case missingAPIKey
+    case missingVoiceID
+    
+    var description: String {
+        switch self {
+        case .invalidResponse:
+            return "Invalid response from ElevenLabs API"
+        case .httpError(let code):
+            return "HTTP error: \(code)"
+        case .apiError(let message):
+            return "API error: \(message)"
+        case .audioGenerationFailed:
+            return "Failed to generate audio"
+        case .missingAPIKey:
+            return "ElevenLabs API key is not configured"
+        case .missingVoiceID:
+            return "ElevenLabs Voice ID is not configured"
+        }
+    }
+}
+
+@Observable
+final class ElevenLabsSettings {
+    static let shared = ElevenLabsSettings()
+    
+    private let defaults = UserDefaults.standard
+    private let apiKeyKey = "elevenLabsAPIKey"
+    private let voiceIDKey = "elevenLabsVoiceID"
+    
+    var apiKey: String {
+        get { defaults.string(forKey: apiKeyKey) ?? "" }
+        set { defaults.set(newValue, forKey: apiKeyKey) }
+    }
+    
+    var voiceID: String {
+        get { defaults.string(forKey: voiceIDKey) ?? "" }
+        set { defaults.set(newValue, forKey: voiceIDKey) }
+    }
+    
+    var isConfigured: Bool {
+        !apiKey.isEmpty && !voiceID.isEmpty
+    }
+}
+
 @Observable
 final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelegate {
     private var inputSequence: AsyncStream<AnalyzerInput>?
@@ -21,6 +70,10 @@ final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelega
     private var recognizerTask: Task<(), Error>?
     //private let synthesizer = AVSpeechSynthesizer()
     private var synth = AVSpeechSynthesizer()
+    private var audioPlayer: AVAudioPlayer?
+    
+    // ElevenLabs API configuration
+    private let elevenLabsEndpoint = "https://api.elevenlabs.io/v1/text-to-speech/"
     
     static let magenta = Color(red: 0.54, green: 0.02, blue: 0.6).opacity(0.8) // #e81cff
     
@@ -76,7 +129,7 @@ final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelega
             do {
                 for try await case let result in transcriber.results {
                     let text = result.text
-                    print("transcribed text: \(text) isFinal: \(result.isFinal)")
+                    print("transcribed text: \(text.characters) isFinal: \(result.isFinal)")
                     if result.isFinal {
                         finalizedTranscript += text
                         volatileTranscript = ""
@@ -94,6 +147,70 @@ final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelega
         try await analyzer?.start(inputSequence: inputSequence)
     }
     
+    func generateElevenLabsSpeech(text: String) async throws -> URL {
+        guard ElevenLabsSettings.shared.isConfigured else {
+            throw ElevenLabsError.missingAPIKey
+        }
+        
+        let url = URL(string: elevenLabsEndpoint + ElevenLabsSettings.shared.voiceID)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(ElevenLabsSettings.shared.apiKey, forHTTPHeaderField: "xi-api-key")
+        
+        let body: [String: Any] = [
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": [
+                "stability": 0.5,
+                "similarity_boost": 0.75
+            ]
+        ]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ElevenLabsError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                print("Error response data: \(errorJson)")
+                if let detail = errorJson["detail"] as? String {
+                    throw ElevenLabsError.apiError(detail)
+                }
+                if httpResponse.statusCode == 401 {
+                    if let message = errorJson["message"] as? String {
+                        throw ElevenLabsError.apiError("Authentication failed: \(message)")
+                    }
+                    throw ElevenLabsError.apiError("Authentication failed: Invalid API key")
+                }
+            }
+            throw ElevenLabsError.httpError(httpResponse.statusCode)
+        }
+        
+        // Save the audio data to a temporary file
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".wav")
+        do {
+            try data.write(to: tempURL)
+            return tempURL
+        } catch {
+            throw ElevenLabsError.audioGenerationFailed
+        }
+    }
+    
+    func playAudioFile(url: URL) {
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.play()
+        } catch {
+            print("Failed to play audio file: \(error)")
+        }
+    }
+    
     func updateStoryWithNewText(withFinal str: AttributedString) {
         story.text.wrappedValue.append(str)
         
@@ -109,23 +226,25 @@ final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelega
                     story.modelResponse.wrappedValue = segment
                 }
                 
-                // After streaming is complete, play the response using text-to-speech
-                await MainActor.run {
-                    if AVAudioSession.sharedInstance().category != .playback {
+                // Generate and play speech using ElevenLabs
+                do {
+                    let audioURL = try await generateElevenLabsSpeech(text: story.modelResponse.wrappedValue)
+                    await MainActor.run {
+                        if AVAudioSession.sharedInstance().category != .playback {
                             do {
                                 try AVAudioSession.sharedInstance().setCategory(.playback)
                             } catch {
-                                print(error)
+                                print("Audio session error: \(error)")
                             }
                         }
-                    synth.delegate = self
-                    let voice = AVSpeechSynthesisVoice(language: "en-US")
-                    let utterance = AVSpeechUtterance(string: story.modelResponse.wrappedValue)
-                    utterance.voice = voice
-                    utterance.rate = 0.5 // Slightly slower rate for better clarity
-                    utterance.pitchMultiplier = 1.0
-                    utterance.volume = 1.0
-                    synth.speak(utterance)
+                        playAudioFile(url: audioURL)
+                    }
+                } catch let error as ElevenLabsError {
+                    print("ElevenLabs error: \(error.description)")
+                    story.modelResponse.wrappedValue += "\n[Speech generation failed: \(error.description)]"
+                } catch {
+                    print("Unexpected error: \(error)")
+                    story.modelResponse.wrappedValue += "\n[Speech generation failed: \(error.localizedDescription)]"
                 }
             } catch {
                 print("Failed to get model response: \(error)")
