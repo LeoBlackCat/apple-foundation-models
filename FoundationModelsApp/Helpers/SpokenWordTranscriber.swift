@@ -12,55 +12,6 @@ import Speech
 import SwiftUI
 import AVFoundation
 
-enum ElevenLabsError: Error {
-    case invalidResponse
-    case httpError(Int)
-    case apiError(String)
-    case audioGenerationFailed
-    case missingAPIKey
-    case missingVoiceID
-    
-    var description: String {
-        switch self {
-        case .invalidResponse:
-            return "Invalid response from ElevenLabs API"
-        case .httpError(let code):
-            return "HTTP error: \(code)"
-        case .apiError(let message):
-            return "API error: \(message)"
-        case .audioGenerationFailed:
-            return "Failed to generate audio"
-        case .missingAPIKey:
-            return "ElevenLabs API key is not configured"
-        case .missingVoiceID:
-            return "ElevenLabs Voice ID is not configured"
-        }
-    }
-}
-
-@Observable
-final class ElevenLabsSettings {
-    static let shared = ElevenLabsSettings()
-    
-    private let defaults = UserDefaults.standard
-    private let apiKeyKey = "elevenLabsAPIKey"
-    private let voiceIDKey = "elevenLabsVoiceID"
-    
-    var apiKey: String {
-        get { defaults.string(forKey: apiKeyKey) ?? "" }
-        set { defaults.set(newValue, forKey: apiKeyKey) }
-    }
-    
-    var voiceID: String {
-        get { defaults.string(forKey: voiceIDKey) ?? "" }
-        set { defaults.set(newValue, forKey: voiceIDKey) }
-    }
-    
-    var isConfigured: Bool {
-        !apiKey.isEmpty && !voiceID.isEmpty
-    }
-}
-
 @Observable
 final class SpokenWordTranscriber: NSObject, Sendable, AVSpeechSynthesizerDelegate {
     private var inputSequence: AsyncStream<AnalyzerInput>?

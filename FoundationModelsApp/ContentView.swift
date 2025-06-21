@@ -77,9 +77,9 @@ struct ContentView: View {
     @State private var isTranscribing: Bool = false
     @State private var supportedLocales: [Locale] = []
     @State private var selectedLocale: Locale = .current
-    @State private var userPrompt: String = "What's a common law?"
+    @State private var userPrompt: String = "Who's your creator? Do you have any relationship with Apple?"
     @State private var showCopiedAlert: Bool = false
-    @State private var selectedTab: Int = 3  // Set default tab to transcription
+    @State private var selectedTab: Int = 1  // Set default tab to voice chat
     @State private var speechSynthDelegate = SpeechSynthDelegate()
     
     private let logger = Logger(subsystem: "com.yourapp.FoundationModelsApp", category: "ContentView")
@@ -212,6 +212,13 @@ struct ContentView: View {
                 }
                 .tag(0)
                 
+                // Voice Chat Tab
+                VoiceChatView()
+                    .tabItem {
+                        Label("Voice Chat", systemImage: "mic.circle.fill")
+                    }
+                    .tag(1)
+                
                 // History Tab
                 VStack {
                     Text("History")
@@ -222,7 +229,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("History", systemImage: "clock.fill")
                 }
-                .tag(1)
+                .tag(2)
                 
                 // Settings Tab
                 VStack {
@@ -254,6 +261,21 @@ struct ContentView: View {
                             .textFieldStyle(.roundedBorder)
                         }
                         
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("TTS Service")
+                                .font(.subheadline)
+                            Picker("TTS Service", selection: .init(
+                                get: { ElevenLabsSettings.shared.selectedTTSService },
+                                set: { ElevenLabsSettings.shared.selectedTTSService = $0 }
+                            )) {
+                                ForEach(TTSService.allCases, id: \.self) { service in
+                                    Text(service.displayName).tag(service)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                        .padding(.top, 8)
+                        
                         GlassButton(
                             title: "Test Speech",
                             systemImage: "speaker.wave.2",
@@ -274,88 +296,6 @@ struct ContentView: View {
                 }
                 .tabItem {
                     Label("Settings", systemImage: "gear")
-                }
-                .tag(2)
-                
-                // Transcription Tab
-                VStack(spacing: 16) {
-                    Text("Text Transcription")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-                    
-                    if !supportedLocales.isEmpty {
-                        Picker("Select Language", selection: $selectedLocale) {
-                            ForEach(supportedLocales, id: \.identifier) { locale in
-                                Text(locale.localizedString(forIdentifier: locale.identifier) ?? locale.identifier)
-                                    .tag(locale)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .padding(8)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(12)
-                    }
-                    
-                    Text((speechTranscriber?.finalizedTranscript ?? "") + (speechTranscriber?.volatileTranscript ?? ""))
-                        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
-                        .padding(8)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-
-                    if !story.modelResponse.isEmpty {
-                        ScrollViewReader { proxy in
-                            ScrollView {
-                                Text(.init(story.modelResponse))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding()
-                                    .background(.ultraThinMaterial)
-                                    .cornerRadius(16)
-                                    .padding(.horizontal)
-                                    .textSelection(.enabled)
-                                    .id("modelResponseText")
-                            }
-                            .onChange(of: story.modelResponse) { _ in
-                                DispatchQueue.main.async {
-                                    withAnimation {
-                                        proxy.scrollTo("modelResponseText", anchor: .bottom)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    HStack(spacing: 12) {
-                        GlassButton(
-                            title: isRecording ? "Stop" : "Transcribe",
-                            systemImage: isRecording ? "stop.circle.fill" : "waveform",
-                            action: {
-                                isRecording.toggle()
-                            },
-                            isDisabled: recorder == nil // Disable if recorder not initialized
-                        )
-                    }
-                    
-                    if !response.isEmpty {
-                        ScrollView {
-                            Text(.init(response))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .cornerRadius(16)
-                                .textSelection(.enabled)
-                        }
-                    }
-                    
-                    Spacer()
-                }
-                .padding()
-                .tabItem {
-                    Label("Transcribe", systemImage: "waveform")
                 }
                 .tag(3)
             }
