@@ -12,6 +12,7 @@ public enum TranscriptionError: Error {
     case localeNotSupported
     case noInternetForModelDownload
     case audioFilePathNotFound
+    case permissionDenied
     
     var descriptionString: String {
         switch self {
@@ -28,6 +29,8 @@ public enum TranscriptionError: Error {
             return "The model could not be downloaded because the user is not connected to internet."
         case .audioFilePathNotFound:
             return "Couldn't write audio to file."
+        case .permissionDenied:
+            return "Permission denied for microphone or speech recognition access."
         }
     }
 }

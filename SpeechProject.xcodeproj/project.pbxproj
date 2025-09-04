@@ -24,25 +24,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		B39883572DF9916700F70CF1 /* FoundationModelsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FoundationModelsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B39883642DF9916900F70CF1 /* FoundationModelsAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoundationModelsAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B398836E2DF9916900F70CF1 /* FoundationModelsAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoundationModelsAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B39883572DF9916700F70CF1 /* SpeechProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpeechProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B39883642DF9916900F70CF1 /* SpeechTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeechTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B398836E2DF9916900F70CF1 /* SpeechUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeechUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B39883592DF9916700F70CF1 /* FoundationModelsApp */ = {
+		B39883592DF9916700F70CF1 /* SpeechApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FoundationModelsApp;
-			sourceTree = "<group>";
-		};
-		B39883672DF9916900F70CF1 /* FoundationModelsAppTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FoundationModelsAppTests;
-			sourceTree = "<group>";
-		};
-		B39883712DF9916900F70CF1 /* FoundationModelsAppUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FoundationModelsAppUITests;
+			path = SpeechApp;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +65,7 @@
 		B398834E2DF9916700F70CF1 = {
 			isa = PBXGroup;
 			children = (
-				B39883592DF9916700F70CF1 /* FoundationModelsApp */,
-				B39883672DF9916900F70CF1 /* FoundationModelsAppTests */,
-				B39883712DF9916900F70CF1 /* FoundationModelsAppUITests */,
+				B39883592DF9916700F70CF1 /* SpeechApp */,
 				B39883582DF9916700F70CF1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +73,9 @@
 		B39883582DF9916700F70CF1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B39883572DF9916700F70CF1 /* FoundationModelsApp.app */,
-				B39883642DF9916900F70CF1 /* FoundationModelsAppTests.xctest */,
-				B398836E2DF9916900F70CF1 /* FoundationModelsAppUITests.xctest */,
+				B39883572DF9916700F70CF1 /* SpeechProject.app */,
+				B39883642DF9916900F70CF1 /* SpeechTests.xctest */,
+				B398836E2DF9916900F70CF1 /* SpeechUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +83,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B39883562DF9916700F70CF1 /* FoundationModelsApp */ = {
+		B39883562DF9916700F70CF1 /* SpeechProject */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B39883782DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "FoundationModelsApp" */;
+			buildConfigurationList = B39883782DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "SpeechProject" */;
 			buildPhases = (
 				B39883532DF9916700F70CF1 /* Sources */,
 				B39883542DF9916700F70CF1 /* Frameworks */,
@@ -108,18 +96,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				B39883592DF9916700F70CF1 /* FoundationModelsApp */,
+				B39883592DF9916700F70CF1 /* SpeechApp */,
 			);
-			name = FoundationModelsApp;
+			name = SpeechProject;
 			packageProductDependencies = (
 			);
 			productName = FoundationModelsApp;
-			productReference = B39883572DF9916700F70CF1 /* FoundationModelsApp.app */;
+			productReference = B39883572DF9916700F70CF1 /* SpeechProject.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B39883632DF9916900F70CF1 /* FoundationModelsAppTests */ = {
+		B39883632DF9916900F70CF1 /* SpeechTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B398837B2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "FoundationModelsAppTests" */;
+			buildConfigurationList = B398837B2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "SpeechTests" */;
 			buildPhases = (
 				B39883602DF9916900F70CF1 /* Sources */,
 				B39883612DF9916900F70CF1 /* Frameworks */,
@@ -130,19 +118,16 @@
 			dependencies = (
 				B39883662DF9916900F70CF1 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				B39883672DF9916900F70CF1 /* FoundationModelsAppTests */,
-			);
-			name = FoundationModelsAppTests;
+			name = SpeechTests;
 			packageProductDependencies = (
 			);
 			productName = FoundationModelsAppTests;
-			productReference = B39883642DF9916900F70CF1 /* FoundationModelsAppTests.xctest */;
+			productReference = B39883642DF9916900F70CF1 /* SpeechTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		B398836D2DF9916900F70CF1 /* FoundationModelsAppUITests */ = {
+		B398836D2DF9916900F70CF1 /* SpeechUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B398837E2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "FoundationModelsAppUITests" */;
+			buildConfigurationList = B398837E2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "SpeechUITests" */;
 			buildPhases = (
 				B398836A2DF9916900F70CF1 /* Sources */,
 				B398836B2DF9916900F70CF1 /* Frameworks */,
@@ -153,14 +138,11 @@
 			dependencies = (
 				B39883702DF9916900F70CF1 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				B39883712DF9916900F70CF1 /* FoundationModelsAppUITests */,
-			);
-			name = FoundationModelsAppUITests;
+			name = SpeechUITests;
 			packageProductDependencies = (
 			);
 			productName = FoundationModelsAppUITests;
-			productReference = B398836E2DF9916900F70CF1 /* FoundationModelsAppUITests.xctest */;
+			productReference = B398836E2DF9916900F70CF1 /* SpeechUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +168,7 @@
 					};
 				};
 			};
-			buildConfigurationList = B39883522DF9916700F70CF1 /* Build configuration list for PBXProject "FoundationModelsApp" */;
+			buildConfigurationList = B39883522DF9916700F70CF1 /* Build configuration list for PBXProject "SpeechProject" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +182,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B39883562DF9916700F70CF1 /* FoundationModelsApp */,
-				B39883632DF9916900F70CF1 /* FoundationModelsAppTests */,
-				B398836D2DF9916900F70CF1 /* FoundationModelsAppUITests */,
+				B39883562DF9916700F70CF1 /* SpeechProject */,
+				B39883632DF9916900F70CF1 /* SpeechTests */,
+				B398836D2DF9916900F70CF1 /* SpeechUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +240,12 @@
 /* Begin PBXTargetDependency section */
 		B39883662DF9916900F70CF1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B39883562DF9916700F70CF1 /* FoundationModelsApp */;
+			target = B39883562DF9916700F70CF1 /* SpeechProject */;
 			targetProxy = B39883652DF9916900F70CF1 /* PBXContainerItemProxy */;
 		};
 		B39883702DF9916900F70CF1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B39883562DF9916700F70CF1 /* FoundationModelsApp */;
+			target = B39883562DF9916700F70CF1 /* SpeechProject */;
 			targetProxy = B398836F2DF9916900F70CF1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -412,6 +394,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Test App";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "I need to use ur mic!";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Please enable Speech Recognition, that's a core function of the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -475,6 +458,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Test App";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "I need to use ur mic!";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Please enable Speech Recognition, that's a core function of the app";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -531,7 +515,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FoundationModelsApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FoundationModelsApp";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Speech.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Speech";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -556,7 +540,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FoundationModelsApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FoundationModelsApp";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Speech.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Speech";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -612,7 +596,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B39883522DF9916700F70CF1 /* Build configuration list for PBXProject "FoundationModelsApp" */ = {
+		B39883522DF9916700F70CF1 /* Build configuration list for PBXProject "SpeechProject" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B39883762DF9916900F70CF1 /* Debug */,
@@ -621,7 +605,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B39883782DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "FoundationModelsApp" */ = {
+		B39883782DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "SpeechProject" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B39883792DF9916900F70CF1 /* Debug */,
@@ -630,7 +614,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B398837B2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "FoundationModelsAppTests" */ = {
+		B398837B2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "SpeechTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B398837C2DF9916900F70CF1 /* Debug */,
@@ -639,7 +623,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B398837E2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "FoundationModelsAppUITests" */ = {
+		B398837E2DF9916900F70CF1 /* Build configuration list for PBXNativeTarget "SpeechUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B398837F2DF9916900F70CF1 /* Debug */,

@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct FoundationModelsAppApp: App {
+struct SpeechApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView(story: .constant(Story(title: "My Story", text: AttributedString("This is a sample story."))))
+            ContentView()
         }
     }
 }
